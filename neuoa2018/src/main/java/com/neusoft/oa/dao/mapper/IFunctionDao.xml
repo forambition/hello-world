@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.oa.dao.IFunctionDao">
+  
+
+  <resultMap id="FunctionResultMap" type="Function" >
+    <id property="no" column="FUNNO" />
+  	<result property="name" column="FUNNAME"/>
+  	<result property="url" column="FUNURL"/>
+  	
+  </resultMap>
+  <resultMap  id="FunctionWithModuleResultMap" type="Function" extends="FunctionResultMap" >
+     <association property="module" resultMap="com.neusoft.oa.dao.IModuleDao.ModuleResultMap"></association>
+  </resultMap>
+  
+  
+  <!-- 取得所有模块列表 -->
+  <select id="selectListByAll" resultMap="FunctionWithModuleResultMap">
+    select a.*,b.MName from OA_SystemFunction a inner join OA_SystemModule b on a.MNO=b.MNO
+  </select>
+  
+  <!-- 取得指定的模块对象 -->
+  <select id="selectByNo" parameterType="int" resultMap="FunctionWithModuleResultMap">
+    select a.*,b.MName from OA_SystemFunction a inner join OA_SystemModule b on a.MNO=b.MNO
+    where a.FUNNO=#{no}
+  </select>
+  
+</mapper>

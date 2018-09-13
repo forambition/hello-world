@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.oa.dao.IEmployeeDao">
+  
+	  <!-- 无图片，无部门映射 -->
+	  <resultMap id="EmployeeResultMap" type="Employee" >
+	    <id property="id" column="EMPID" />
+	  	<result property="password" column="EMPPASSWORD"/>
+	  	<result property="name" column="EMPNAME"/>
+	  	<result property="sex" column="EMPSEX"/>
+	  	<result property="age" column="age"/>
+	  	<result property="salary" column="Salary"/>
+	  	<result property="birthday" column="Birthday"/>
+	  	<result property="joinDate" column="joinDate"/>
+	  	<result property="desc" column="EMPDESC"/>
+	  </resultMap>
+	  <!-- 有图片字段映射的resultMap -->
+	  <resultMap id="EmployeeWithPhotoResultMap" type="Employee"  extends="EmployeeResultMap" >
+	  	<result property="photo" column="PHOTO"/>
+	  	<result property="photoFileName" column="photoFileName"/>
+	  	<result property="photoContentType" column="photoContentType"/>
+	  
+	  </resultMap>
+	  <!-- 有部门映射的resultMap -->
+	  <resultMap id="EmployeeWithDepartmentResultMap" type="Employee"  extends="EmployeeResultMap" >
+	  	<!-- 内嵌式resultMap方式实现对一关联映射 -->
+	  	<!-- 
+	  	<association property="department" resultMap="com.neusoft.oa.dao.IDepartmentDao.DepartmentResultMap"></association> 
+	     -->
+	    <!-- 内嵌式select方式实现对一关联映射 -->
+	    
+	  	<association property="department" column="DEPTNO" select="com.neusoft.oa.dao.IDepartmentDao.selectByNoWithoutEmployee" fetchType="eager"></association>
+	  	
+	  </resultMap>
+	  <!-- 同时有图片和关联部门的resultMap -->
+	  <resultMap id="EmployeeWithPhotoAndDepartmentResultMap" type="Employee"  extends="EmployeeWithPhotoResultMap" >
+	  	<association property="department" resultMap="com.neusoft.oa.dao.IDepartmentDao.DepartmentResultMap"></association> 
+	  </resultMap>
+	  <!-- 取得员工的照片，关联的部门，关联的角色 -->
+	  <resultMap  id="EmployeeWithPhotoAndDepartmentAndRolesResultMap" type="Employee" extends="EmployeeWithPhotoAndDepartmentResultMap">
+	     <collection property="roles" javaType="ArrayList" ofType="Role" resultMap="com.neusoft.oa.dao.IRoleDao.RoleResultMap"></collection>
+	  </resultMap>
+	  <!-- 有关联角色列表的resultMap -->
+	  <resultMap id="EmployeeWithRolesResultMap" type="Employee" extends="EmployeeResultMap" >
+	     <collection property="roles" javaType="ArrayList" ofType="Role" resultMap="com.neusoft.oa.dao.IRoleDao.RoleResultMap"></collection>
+	  </resultMap>
+  
+	<!-- 增加员工，无图片 -->
+	<insert id="createWithoutPhoto" parameterType="Employee">
+	   insert into OA_Employee (EMPID,EMPPASSWORD,EMPNAME,EMPSEX,AGE,Salary,Birthday,JoinDate,DEPTNO,EMPDESC) 
+	   values (#{id},#{password},#{name},#{sex},#{age},#{salary},#{birthday,jdbcType=DATE},#{joinDate,jdbcType=DATE},#{department.no},#{desc,jdbcType=VARCHAR})
+	</insert>
+	<!-- 增加员工，有图片 -->
+  	<insert id="createWithPhoto" parameterType="Employee">
+	   insert into OA_Employee (EMPID,EMPPASSWORD,EMPNAME,EMPSEX,AGE,Salary,Birthday,JoinDate,PHOTO,PhotoFileName,PhotoContentType,DEPTNO,EMPDESC) 
+	   values (#{id},#{password},#{name},#{sex},#{age},#{salary},#{birthday},#{joinDate},#{photo},#{photoFileName},#{photoContentType},#{department.no},#{desc,jdbcType=VARCHAR})
+	</insert>
+	
+	<!-- 角色相关的方法 -->
+	<!-- 为指定的员工授予指定的角色 -->
+	<insert id="grantRole"  >
+	insert into OA_EmployeeRole values (#{id},#{roleNo})
+	</insert>
+	
+	
+	<!-- 修改员工，无图片 -->
+	<update id="updateWithoutPhoto" parameterType="Employee">
+	update OA_Employee set EMPPASSWORD=#{password},EMPNAME=#{name},EMPSEX=#{sex},AGE=#{age},DEPTNO=#{department.no},
+	SALARY=#{salary},BIRTHDAY=#{birthday},JOINDATE=#{joinDate},EMPDESC=#{desc,jdbcType=VARCHAR} where EMPID=#{id}
+	</update>
+	<!-- 修改员工，有图片 -->
+  	<update id="updateWithPhoto" parameterType="Employee">
+	update OA_Employee set EMPPASSWORD=#{password},EMPNAME=#{name},EMPSEX=#{sex},AGE=#{age},
+	SALARY=#{salary},BIRTHDAY=#{birthday},JOINDATE=#{joinDate},DEPTNO=#{department.no},EMPDESC=#{desc,jdbcType=VARCHAR},
+	PHOTO=#{photo},PHOTOFILENAME=#{photoFileName},PHOTOContentType=#{photoContentType}
+	 where EMPID=#{id}
+	</update>
+ 	<!-- 删除员工 -->
+ 	<delete id="delete" parameterType="Employee">
+   		delete  from OA_Employee where EMPID=#{id}
+ 	</delete>
+ 	<!-- 清除指定员工的所有授予的角色 -->
+ 	<delete id="revokeAllRoles" parameterType="string">
+ 	  delete from OA_EmployeeRole  where EMPID=#{id}
+ 	</delete>
+	
+	<!-- 取得指定的员工对象， 取单个对象 -->
+	<select id="selectById" parameterType="string" resultMap="EmployeeWithPhotoAndDepartmentAndRolesResultMap">
+	  select a.*,b.deptcode,b.deptname,d.RNO,d.RNAME from OA_Employee a inner join OA_Department b  on a.deptno=b.deptno
+	  left outer join OA_EmployeeRole c on a.EMPID=c.EMPID left outer join OA_ROLE d on c.RNO=d.RNO 
+ 	 
+ 	 where a.EMPID=#{id}
+ 	 
+ 	 
+	</select>
+	<!-- 根据账号和密码取得员工的个数，用于登录验证 -->
+	<select id="selectCountByIdAndPassword" resultType="int">
+	  select count(EMPID) from OA_Employee where EMPID=#{id} and EMPPASSWORD=#{password}
+	</select>
+	
+	<!-- 取得所有员工列表，无关联的部门， 无分页 -->  
+	<select id="selectListWithoutDepartmentByAll" resultMap="EmployeeResultMap">
+	select *  from OA_Employee 
+	</select>
+	
+	<!-- 取得所有员工列表，有关联的部门， 无分页 -->  
+	<select id="selectListWithDepartmentByAll" resultMap="EmployeeWithDepartmentResultMap">
+	select a.*,b.deptcode,b.deptname from OA_Employee a inner join OA_Department b
+ 	on a.deptno=b.deptno
+	</select>
+	
+	<select id="selectListWithRolesByAll" resultMap="EmployeeWithRolesResultMap">
+	select a.*, c.*
+	from oa_employee a inner join oa_employeerole b on a.empid=b.empid
+	inner join oa_role c on b.Rno=c.Rno
+	</select>
+
+	
+	<!-- 取得所有员工列表 有分页 -->  
+	<select id="selectListByAllWithPage">
+	
+	</select>
+	<!-- 根据部门编号，取得员工列表 -->
+	<select id="selectListByDepartment" parameterType="int" resultMap="EmployeeResultMap" >
+	  select * from OA_Employee  where DEPTNO=#{departmentNo}
+	</select>
+	<!-- 取得指定角色的员工列表，无分页,不取关联的角色集合 -->
+	<select id="selectListWithoutRolesByRole" parameterType="int" resultMap="EmployeeResultMap">
+	select a.*
+	from OA_Employee a inner join OA_EmployeeRole b
+	on a.EMPID=b.EMPID
+	where RNO=#{roleNo}
+	
+	</select>
+	
+	<!-- 按检索条件取得员工列表 无分页 -->
+	<select id="selectListByCondition" resultMap="EmployeeWithDepartmentResultMap">
+	   select a.* from OA_Employee a
+	   <trim prefix="WHERE" prefixOverrides="AND|OR ">
+	   <if test="departmentNo!=0">
+	     and a.DEPTNO=#{departmentNo}
+	   </if>
+	   <if test="sex!=null and sex!=''">
+	      and a.EMPSEX=#{sex} 
+	   </if>
+	   <if test="startDate!=null">
+	      and a.Birthday &gt;=#{startDate}
+	   </if>
+	   <if test="endDate!=null">
+	      and a.Birthday &lt;=#{endDate}
+	   </if>
+	   <if test="name!=null and name!=''">
+	      and a.EMPNAME like #{name}
+	   </if>
+	   <if test="roles!=null">
+	      and a.EMPID in (  select EMPID from OA_EmployeeRole where RNO in
+	      <foreach item="roleNo" collection="roles" open="(" separator="," close=")">
+	         #{roleNo}
+	      </foreach>
+	      )
+	   </if>
+	 </trim> 
+	
+	</select>
+	<!-- 按检索条件取得员工列表 有分页 -->
+	<select id="selectListByConditionWithPage" resultMap="EmployeeWithDepartmentResultMap">
+	SELECT * FROM  (SELECT X.*, ROWNUM RN  
+	FROM (
+
+	    select a.* from OA_Employee a
+	   <trim prefix="WHERE" prefixOverrides="AND|OR ">
+	   <if test="departmentNo!=0">
+	     and a.DEPTNO=#{departmentNo}
+	   </if>
+	   <if test="sex!=null and sex!=''">
+	      and a.EMPSEX=#{sex} 
+	   </if>
+	   <if test="startDate!=null">
+	      and a.Birthday &gt;=#{startDate}
+	   </if>
+	   <if test="endDate!=null">
+	      and a.Birthday &lt;=#{endDate}
+	   </if>
+	   <if test="name!=null and name!=''">
+	      and a.EMPNAME like #{name}
+	   </if>
+	   <if test="roles!=null">
+	      and a.EMPID in (  select EMPID from OA_EmployeeRole where RNO in
+	      <foreach item="roleNo" collection="roles" open="(" separator="," close=")">
+	         #{roleNo}
+	      </foreach>
+	      )
+	   </if>
+	 </trim> 
+
+	)
+	 X WHERE ROWNUM &lt;=#{end})  WHERE RN &gt;=#{start}
+	
+	</select>
+	<!-- 根据检索条件取得员工的个数 -->
+	<select id="selectCountByCondition" resultType="int">
+	   select count(a.EMPID) from OA_Employee a
+	   <trim prefix="WHERE" prefixOverrides="AND|OR ">
+	   <if test="departmentNo!=0">
+	     and a.DEPTNO=#{departmentNo}
+	   </if>
+	   <if test="sex!=null and sex!=''">
+	      and a.EMPSEX=#{sex} 
+	   </if>
+	   <if test="startDate!=null">
+	      and a.Birthday &gt;=#{startDate}
+	   </if>
+	   <if test="endDate!=null">
+	      and a.Birthday &lt;=#{endDate}
+	   </if>
+	   <if test="name!=null and name!=''">
+	      and a.EMPNAME like #{name}
+	   </if>
+	   <if test="roles!=null">
+	      and a.EMPID in (  select EMPID from OA_EmployeeRole where RNO in
+	      <foreach item="roleNo" collection="roles" open="(" separator="," close=")">
+	         #{roleNo}
+	      </foreach>
+	      )
+	   </if>
+	 </trim> 
+	</select>
+	
+	
+	<!-- 取得指定员工的授予的功能列表 -->
+	<select id="selectFucntionsByEmployee" parameterType="string" resultMap="com.neusoft.oa.dao.IFunctionDao.FunctionWithModuleResultMap">
+	  select a.*,b.mname from OA_SystemFunction a inner join OA_SystemModule b on a.MNO=b.MNO
+	  where a.FUNNO in (select FUNNO from OA_RoleSystemFunction 
+	  where RNO in (select RNO from OA_EmployeeRole where EMPID=#{id}))
+	</select>
+	
+  
+  
+  
+  
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.oa.dao.ILocationDao">
+  
+
+  <resultMap id="LocationResultMap" type="Location" >
+    <id property="no" column="LNO" />
+  	<result property="room" column="ROOMCODE"/>
+  	<result property="building" column="dBuildingCode"/>
+  	<result property="address" column="ADDRESS"/>
+  </resultMap>
+  
+  <insert id="create" parameterType="Location">
+     <selectKey keyProperty="no" keyColumn="LNO" resultType="int" order="BEFORE">
+        select OA_LOCATION_SQ.nextval from dual
+     </selectKey>
+     insert into OA_Location (LNO,ROOMCODE,BuildingCode,Address) values (#{no},#{room},#{building,jdbcType=VARCHAR},#{address,jdbcType=VARCHAR})
+  </insert>
+  
+  <update id="update" parameterType="Location">
+    update OA_Location set ROOMCODE=#{room}, BuildingCode=#{building,jdbcType=VARCHAR},ADDRESS=#{address,jdbcType=VARCHAR} where LNO=#{no}
+  </update>
+  
+  <delete id="delete" parameterType="Location">
+      delete from OA_Location where LNO=#{no}
+  </delete>
+  
+  <select id="selectListByAll" resultMap="LocationResultMap">
+    select * from OA_Location
+  </select>
+  
+  <select id="selectListByAllWithPage" resultMap="LocationResultMap">
+    select * from OA_Location
+  </select>
+  
+  <select id="selectCountByAll" resultType="int">
+    select count(*) from OA_Location
+  </select>
+  
+  
+  
+  <select id="selectByNo" parameterType="int" resultMap="LocationResultMap">
+     select * from OA_Location where LNO=#{locationNo}
+  </select>
+  
+</mapper>

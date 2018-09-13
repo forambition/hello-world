@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.oa.dao.IRoleDao">
+  
+
+  <resultMap id="RoleResultMap" type="Role" >
+    <id property="no" column="RNO" />
+  	<result property="name" column="RNAME"/>
+  </resultMap>
+  <!-- 关联员工的ResultMap -->
+  <resultMap id="RoleWithEmployeesResultMap" type="Role" extends="RoleResultMap">
+     <!-- 内嵌式Select实现对多关联 -->
+     
+     <collection property="employees" column="RNO" javaType="ArrayList" ofType="Employee" select="com.neusoft.oa.dao.IEmployeeDao.selectListWithoutRolesByRole" ></collection>
+     
+      <!-- 
+      <collection property="employees" javaType="ArrayList" ofType="Employee" resultMap="com.neusoft.oa.dao.IEmployeeDao.EmployeeResultMap"></collection>
+       -->
+  </resultMap>
+  
+  <insert id="create" parameterType="Role">
+     <selectKey keyProperty="no" keyColumn="RNO" resultType="int" order="BEFORE">
+        select OA_ROLE_SQ.nextval from dual
+     </selectKey>
+     insert into OA_Role (RNO,RNAME) values (#{no},#{name,jdbcType=VARCHAR})
+  </insert>
+  <!-- 为角色授予系统功能 -->
+  <insert id="grantFunction">
+    insert into OA_RoleSystemFunction values(#{roleNo},#{functionNo})
+  </insert>
+  
+  <update id="update" parameterType="Role">
+    update OA_Role set RNAME=#{name,jdbcType=VARCHAR} where RNO=#{no}
+  </update>
+  
+  <delete id="delete" parameterType="Role">
+      delete from OA_Role where RNO=#{no}
+  </delete>
+  <!-- 删除指定角色的功能授权 -->
+  <delete id="revokeAllFunctions" parameterType="int">
+    delete from OA_RoleSystemFunction where RNO=#{roleNo}
+  </delete>
+  <!-- 取得所有角色列表，无关联的员工列表 无分页 -->
+  <select id="selectListWithoutEmployeesByAll" resultMap="RoleResultMap">
+    select * from OA_Role
+  </select>
+  <!-- 取得所有角色列表，有关联的员工列表 无分页 -->
+  <select id="selectListWithEmployeesByAll" resultMap="RoleWithEmployeesResultMap">
+    <!--  
+    select a.*,c.*
+	from OA_Employee a inner join OA_EmployeeRole b
+	on a.EMPID=b.EMPID 
+	right outer join OA_ROLE c on b.RNO=c.RNO
+	-->
+	select * from OA_Role
+  </select>
+  
+  
+  <select id="selectListByAllWithPage" resultMap="RoleResultMap">
+    SELECT * FROM  (SELECT A.*, ROWNUM RN FROM (SELECT * FROM OA_ROLE order by RNO) A  WHERE ROWNUM &lt;=#{end})  WHERE RN &gt;=#{start}
+  </select>
+  
+  <select id="selectByNo" parameterType="int" resultMap="RoleResultMap">
+     select * from OA_Role where RNO=#{no}
+  </select>
+  
+  <select id="selectCountByAll" resultType="int">
+  	  select count(RNO) from OA_Role
+  </select>
+  
+  <!-- 取得指定角色的功能列表 -->
+  <select id="selectFunctionListByRole" parameterType="int" resultMap="com.neusoft.oa.dao.IFunctionDao.FunctionResultMap" >
+    select * from OA_SystemFunction where FUNNO in (select FUNNO from OA_RoleSystemFunction where RNO=#{roleNo})
+  </select>
+  
+  
+  
+</mapper>

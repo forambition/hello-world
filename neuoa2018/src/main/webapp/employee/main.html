@@ -1,0 +1,76 @@
+<script src="employee/main.js"></script>
+<div class="panel panel-default">
+         <div class="panel-heading">
+             <div class="row">
+	            <div class="col-md-4"><b>员工管理</b></div>
+	            <div class="col-md-8 text-right"> <a href="#" id="EmployeeAddLink" class="btn btn-default">增加</a><a href="#" id="EmployeeModifyLink" class="btn btn-default">修改</a><a href="#" id="EmployeeDeleteLink" class="btn btn-default">删除</a><a href="#" id="EmployeeViewLink" class="btn btn-default">查看</a></div>
+            </div>
+         </div>
+         <!-- /.panel-heading -->
+         <div class="panel-body">
+           <div class="row">
+	            <div class="col-md-1">
+	            	部门
+	            </div>
+	            <div class="col-md-3">
+	              <select class="form-control" id="DepartmentSelection">
+	                 <option value="0">所有</option>
+	                
+	              </select>
+	            </div>
+	            <div class="col-md-1">
+	            	性别
+	            </div>
+	            <div class="col-md-3">
+		            <label class="radio-inline">
+				        <input type="radio"  name="empsex"  value="" checked>全部
+				    </label>
+				    <label class="radio-inline">
+				        <input type="radio" name="empsex" value="男" >男
+				    </label>
+				    <label class="radio-inline">
+				        <input type="radio" name="empsex" value="女" >女
+				    </label>
+	            </div>
+	            <div class="col-md-1">
+	            	姓名
+	            </div>
+	            <div class="col-md-3">
+	              <input type="text" class="form-control" id="employeeName" />
+	            </div> 	
+            </div>
+            <div class="row">
+	            <div class="col-md-1">
+	            	起始
+	            </div>
+	            <div class="col-md-3">
+	              <input type="date" class="form-control" id="StartBirthdayDate" />
+	            </div>
+	            <div class="col-md-1">
+	            	截止
+	            </div>
+	            <div class="col-md-3">
+		            <input type="date" class="form-control" id="EndBirthdayDate" />
+	            </div>
+	            </div>
+	            <div class="row">
+	            <div class="col-md-1">
+	            	角色
+	            </div>
+	            <!-- 角色复选框显示区域 -->
+	            <div class="col-md-10" id="RolesCheckboxArea">
+	            </div> 	
+            </div>
+            
+            
+            <div class="col-md-12">
+            <table id="employeeGrid"></table>
+			<div id="employeeGridPager"></div>
+			</div>
+             
+         </div>
+         <!-- /.panel-body -->
+ </div>
+<div id="EmployeeDialog"></div>
+
+
